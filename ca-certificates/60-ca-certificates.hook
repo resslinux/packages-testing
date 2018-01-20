@@ -1,0 +1,11 @@
+[Trigger]
+Type = File
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Target = usr/share/ca-certificates/*
+
+[Action]
+Description = Updating ca-certificates...
+When = PostTransaction
+Exec = /usr/sbin/update-ca-certificates &> /dev/null

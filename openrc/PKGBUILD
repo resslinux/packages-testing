@@ -1,0 +1,48 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgbase=openrc
+pkgname=('openrc-doc' 'openrc-dev' 'openrc')
+pkgver=0.34.r54.g87c98ebb
+pkgrel=1
+pkgdesc='Dependency based init system that works with sysvinit.'
+arch=('x86_64')
+url='https://github.com/OpenRC/openrc/'
+license=('BSD')
+depends=('musl')
+optdepends=('openrc-arch-services-git: collection of services for Arch'
+            'net-tools: for network service support')
+source=('git://anongit.gentoo.org/proj/openrc.git')
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  make LIBEXECDIR=/lib/rc
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+  
+  make LIBEXECDIR=/lib/rc DESTDIR="$tmpdir" install
+}
+
+package_openrc-doc() {
+  package-doc
+}
+
+package_openrc-dev() {
+  package-dev
+}
+
+package_openrc() {
+  groups=('base')
+  
+  package-base
+}

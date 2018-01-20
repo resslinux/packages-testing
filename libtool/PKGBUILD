@@ -1,0 +1,44 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libtool
+pkgver=2.4.6.r34.g08c5524f
+pkgrel=1
+pkgdesc="A generic library support script"
+arch=('x86_64')
+license=('GPL')
+url="http://www.gnu.org/software/libtool"
+depends=('bash')
+makedepends=('m4' 'help2man')
+source=(git://git.sv.gnu.org/libtool.git
+        git://git.sv.gnu.org/gnulib.git)
+md5sums=('SKIP'
+         'SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "$pkgname"
+  
+  sed -i -e "s/patch -s/patch/" "$srcdir"/gnulib/gnulib-tool
+  
+  rm gl/build-aux/do-release-commit-and-tag.diff
+}
+
+build() {
+  cd "$pkgname"
+  
+  ./bootstrap --skip-git --gnulib-srcdir="$srcdir/gnulib/"
+  ./configure --prefix=/usr \
+              --disable-static \
+  
+  make
+}
+
+package() {
+  cd "$pkgname"
+  
+  make DESTDIR="$pkgdir" install
+}

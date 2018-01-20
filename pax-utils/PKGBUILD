@@ -1,0 +1,55 @@
+pkgbase=pax-utils
+pkgname=('pax-utils-doc' 'scanelf' 'pax-utils')
+pkgver=1.2.2.r12.ga4cdced
+pkgrel=1
+pkgdesc="ELF related utils for ELF 32/64 binaries"
+url="https://wiki.gentoo.org/wiki/Hardened/PaX_Utilities"
+arch=('x86_64')
+license=('GPL2')
+depends_doc=()
+depends=()
+makedepends=()
+source=(git://anongit.gentoo.org/proj/$pkgbase.git)
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  make USE_CAP=yes
+  
+  cd man
+  
+  make
+}
+
+package(){
+  package-init
+  
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+  
+  rm -f "$tmpdir"/usr/bin/lddtree
+}
+
+package_pax-utils-doc() {
+  package-doc
+}
+
+package_scanelf() {
+  pkgdesc="Scan ELF binaries for stuff"
+  depends=()
+  
+  mkdir -p "$pkgdir/usr/bin"
+  mv "$tmpdir/usr/bin/scanelf" "$pkgdir/usr/bin/"
+}
+
+package_pax-utils() {
+  package-base
+}

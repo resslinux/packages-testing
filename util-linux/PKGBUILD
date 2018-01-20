@@ -1,0 +1,132 @@
+pkgbase=util-linux
+pkgname=('util-linux-doc' 'util-linux-dev' 'libuuid' 'libblkid' 'libmount' 'libsmartcols' 'libfdisk' 'sfdisk' 'findmnt' 'mcookie' 'blkid' 'util-linux')
+pkgver=2.31.r173.g43afa8458
+pkgrel=1
+pkgdesc="Miscellaneous system utilities for Linux"
+url="https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git"
+arch=('x86_64')
+license=('GPL2')
+depends_doc=()
+depends_dev=()
+depends_lib=()
+depends=()
+makedepends=('bison')
+source=(git://git.kernel.org/pub/scm/utils/util-linux/$pkgbase.git)
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  ./autogen.sh
+  
+  ./configure --prefix=/usr \
+              --enable-raw \
+              --disable-uuidd \
+              --disable-nls \
+              --disable-tls \
+              --disable-kill \
+              --disable-login \
+              --disable-last \
+              --disable-sulogin \
+              --disable-su \
+              --without-python
+  
+  make
+}
+
+package(){
+  package-init
+  
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+}
+
+package_util-linux-doc() {
+  package-doc
+}
+
+package_util-linux-dev() {
+  package-dev
+}
+
+package_blkid() {
+  pkgdesc="block device identification tool"
+  depends=()
+  
+  mkdir -p "$pkgdir/sbin"
+  mv "$tmpdir/sbin/blkid" "$pkgdir/sbin/"
+}
+
+package_libuuid() {
+  pkgdesc="DCE compatible Universally Unique Identifier library"
+  depends=()
+  
+  mkdir -p "$pkgdir/lib"
+  mv "$tmpdir"/lib/libuuid* "$pkgdir/lib/"
+}
+
+package_libblkid() {
+  pkgdesc="Block device identification library from util-linux"
+  depends=()
+  
+  mkdir -p "$pkgdir/lib"
+  mv "$tmpdir"/lib/libblkid* "$pkgdir/lib/"
+}
+
+package_libmount() {
+  pkgdesc="Block device identification library from util-linux"
+  depends=()
+  
+  mkdir -p "$pkgdir/lib"
+  mv "$tmpdir"/lib/libmount.so.* "$pkgdir/lib/"
+}
+
+package_libsmartcols() {
+  pkgdesc="Formatting library for ls-like programs."
+  depends=()
+  
+  mkdir -p "$pkgdir/lib"
+  mv "$tmpdir"/lib/libsmartcols.so.* "$pkgdir/lib/"
+}
+
+package_libfdisk() {
+  pkgdesc="Partitioning library for fdisk-like programs"
+  depends=()
+  
+  mkdir -p "$pkgdir/lib"
+  mv "$tmpdir"/lib/libfdisk.so.* "$pkgdir/lib/"
+}
+
+package_sfdisk() {
+  pkgdesc="Partition table manipulator from util-linux"
+  depends=()
+  
+  mkdir -p "$pkgdir/sbin"
+  mv "$tmpdir/sbin/sfdisk" "$pkgdir/sbin/"
+}
+
+package_mcookie() {
+  pkgdesc="mcookie from util-linux"
+  
+  mkdir -p "$pkgdir/usr/bin"
+  mv "$tmpdir/usr/bin/mcookie" "$pkgdir/usr/bin/"
+}
+
+package_findmnt() {
+  pkgdesc="findmnt from util-linux"
+  depends=()
+  
+  mkdir -p "$pkgdir/bin"
+  mv "$tmpdir/bin/findmnt" "$pkgdir/bin"
+}
+
+package_util-linux() {
+  package-base
+}

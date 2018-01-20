@@ -1,0 +1,100 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgbase=binutils
+pkgname=('binutils-doc' 'binutils-dev' 'binutils-lib' 'binutils-gold' 'binutils')
+pkgver=2.28.r407.g6aa1df2d
+pkgrel=1
+pkgdesc="Tools necessary to build programs"
+url="http://www.gnu.org/software/binutils/"
+depends_doc=()
+depends_dev=('binutils')
+depends_lib=('musl')
+depends=('binutils-lib')
+makedepends=('bison' 'flex' 'texinfo' 'zlib-dev')
+arch=('x86_64')
+license=('GPL2 GPL3+ LGPL2 BSD')
+source=(binutils::git://sourceware.org/git/binutils-gdb.git)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  commit=$(git describe --long --tags | rev | cut -d - -f 1,2 | rev)
+  version=$(grep "Changes in" binutils/NEWS | head -n 1 | cut -d " " -f 3 | sed 's/://')
+  echo "$version-$commit" | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  ./configure --build=$CBUILD \
+              --host=$CHOST \
+              --target=$CTARGET \
+              --with-build-sysroot="$CBUILDROOT" \
+              --with-sysroot=/ \
+              --prefix=/usr \
+              --mandir=/usr/share/man \
+              --infodir=/usr/share/info \
+              --disable-multilib \
+              --enable-shared \
+              --enable-ld=default \
+              --enable-gold=yes \
+              --enable-64-bit-bfd \
+              --enable-plugins \
+              --enable-relro \
+              --enable-install-libiberty \
+              --disable-werror \
+              --disable-nls \
+              --with-system-zlib \
+              --disable-gdb \
+              --disable-libdecnumber \
+              --disable-readline \
+              --disable-sim
+  
+  make
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+  
+  if [ -d "$tmpdir"/usr/lib64 ]; then
+    mv "$tmpdir"/usr/lib64/* "$tmpdir"/usr/lib/
+    rmdir "$tmpdir"/usr/lib64
+  fi
+}
+
+package_binutils-doc() {
+  package-doc
+}
+
+package_binutils-dev() {
+  package-dev
+}
+
+package_binutils-lib() {
+  pkgdesc="Runtime libraries from binutils - libbfd and libopcodes"
+  
+  mkdir -p "$pkgdir"/usr/lib
+  mv "$tmpdir"/usr/lib/lib*.so "$pkgdir"/usr/lib/
+}
+
+package_binutils-gold() {
+  depends=('musl')
+  pkgdesc="GNU binutils - gold linker"
+  
+  if [ -e "$tmpdir"/usr/bin/ld.gold ]; then
+    mkdir -p "$pkgdir"/usr/bin
+    mv "$tmpdir"/usr/bin/ld.gold "$pkgdir"/usr/bin
+  fi
+  
+  mkdir -p "$pkgdir"/usr/$CHOST/bin
+  mv "$tmpdir"/usr/$CHOST/bin/ld.gold "$pkgdir"/usr/$CHOST/bin/ld.gold
+}
+
+package_binutils() {
+  groups=('base-devel')
+  package-base
+}

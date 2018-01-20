@@ -1,0 +1,72 @@
+# $Id$
+# Maintainer: Anatol Pomozov <anatol.pomozov@gmail.com>
+# Contributor: Filip Brcic <brcha@gna.org>
+# Contributor: Mika Fischer <mika.fischer@zoopnet.de>
+# Contributor: Gergely Imreh <imrehgATgmailDOTcom>
+
+pkgbase=ninja
+pkgname=('ninja-doc' 'ninja')
+pkgver=1.8.2.e234a7bd
+pkgrel=1
+pkgdesc='Small build system with a focus on speed'
+arch=(x86_64)
+url='https://ninja-build.org/'
+license=(Apache)
+depends_doc=()
+depends=()
+makedepends=('python')
+source=(git://github.com/ninja-build/ninja.git
+        musl.patch)
+sha256sums=('SKIP'
+            '98676099229b3cd0bcb4203d75339c37a90fd16ff0e81b86689de9d384213019')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  version=$(grep "kNinjaVersion =" src/version.cc | cut -d " " -f 5 | cut -d '"' -f 2)
+  commit=$(git describe --long --tags --always)
+  echo "${version%.git}.$commit"
+}
+
+prepare() {
+  cd "$pkgbase"
+  
+  patch -Np1 -i "$srcdir"/musl.patch
+}
+
+build() {
+  cd "$pkgbase"
+
+  python configure.py --bootstrap
+}
+
+check() {
+  cd "$pkgbase"
+
+  python ./configure.py
+  
+  ./ninja ninja_test
+  ./ninja_test --gtest_filter=-SubprocessTest.SetWithLots
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+
+  install -m755 -D ninja "$tmpdir/usr/bin/ninja"
+  
+  install -m644 -D doc/manual.asciidoc "$tmpdir/usr/share/doc/ninja/manual.asciidoc"
+  install -Dm644 COPYING "$tmpdir/usr/share/licenses/$pkgbase/COPYING"
+
+  install -m644 -D misc/bash-completion "$tmpdir/usr/share/bash-completion/completions/ninja"
+  install -m644 -D misc/zsh-completion "$tmpdir/usr/share/zsh/site-functions/_ninja"
+}
+
+package_ninja-doc() {
+  package-doc
+}
+
+package_ninja() {
+  package-base
+} 

@@ -1,0 +1,78 @@
+pkgname=filesystem
+pkgver=20171228.r0.gee15f9e
+pkgrel=1
+pkgdesc="Ress Linux base filesystem"
+url="https://github.com/resslinux/filesystem"
+arch=('x86_64')
+license=('BSD')
+depends=('busybox')
+groups=('base')
+source=('git://github.com/resslinux/filesystem.git')
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+package(){
+  mv "$pkgname" "$pkgdir/../"
+  
+  cd "$pkgdir"
+  
+  rm -rf ".git"
+  
+  install -m 0755 -d dev \
+                     dev/pts \
+                     dev/shm \
+                     etc \
+                     etc/conf.d \
+                     etc/crontabs \
+                     etc/init.d \
+                     etc/modprobe.d \
+                     etc/modules-load.d \
+                     etc/network/if-down.d \
+                     etc/network/if-post-down.d \
+                     etc/network/if-pre-up.d \
+                     etc/network/if-up.d \
+                     etc/opt \
+                     etc/periodic/15min \
+                     etc/periodic/daily \
+                     etc/periodic/hourly \
+                     etc/periodic/monthly \
+                     etc/periodic/weekly \
+                     etc/profile.d \
+                     etc/sysctl.d \
+                     home \
+                     media/cdrom \
+                     media/floppy \
+                     media/usb \
+                     mnt \
+                     proc \
+                     run \
+                     sbin \
+                     srv \
+                     sys \
+                     usr/bin \
+                     usr/local/bin \
+                     usr/local/lib \
+                     usr/local/share \
+                     usr/sbin \
+                     usr/share \
+                     usr/share/man \
+                     usr/share/misc \
+                     var/cache \
+                     var/cache/misc \
+                     var/lib \
+                     var/lib/misc \
+                     var/local \
+                     var/lock/subsys \
+                     var/log \
+                     var/opt \
+                     var/run
+  
+  install -d -m 0700 root
+  install -d -m 1777 tmp var/tmp
+  install -d -m 0555 var/empty
+}

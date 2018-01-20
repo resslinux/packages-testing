@@ -1,0 +1,28 @@
+pkgbase=lddtree
+pkgname=lddtree
+pkgver=1.26.r3.g367581e
+pkgrel=1
+pkgdesc="List dynamic dependencies as a tree"
+url="https://github.com/ncopa/lddtree"
+arch=('x86_64')
+license=('GPL2')
+depends=('scanelf')
+makedepends=()
+source=(git://github.com/ncopa/$pkgbase.git)
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  return 0
+}
+
+package(){
+  cd "$pkgbase"
+  
+  install -Dm755 lddtree.sh "$pkgdir"/usr/bin/lddtree
+}

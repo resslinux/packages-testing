@@ -1,0 +1,39 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=attr
+pkgver=2.4.47.r49.gc1a7b53
+pkgrel=1
+pkgdesc="Utilities for managing filesystem extended attributes"
+url="http://acl.bestbits.at/"
+arch=('x86_64')
+license=('GPL2+')
+makedepends=('bash' 'gzip')
+source=(git://git.sv.gnu.org/$pkgname.git)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgname"
+  
+  ./autogen.sh
+  
+  export INSTALL_USER=root
+  export INSTALL_GROUP=root
+  
+  ./configure --prefix=/usr \
+              --libdir=/usr/lib \
+              --libexecdir=/usr/lib \
+              --disable-gettext
+
+  make
+}
+
+package() {
+  cd "$pkgname"
+  
+  make DESTDIR="$pkgdir" install
+}

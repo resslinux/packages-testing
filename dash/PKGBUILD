@@ -1,0 +1,54 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgbase=dash
+pkgname=('dash-doc' 'dash')
+pkgver=0.5.9.1.r0.gafe0e01
+pkgrel=1
+pkgdesc="Small and fast POSIX-compliant shell"
+url="http://gondor.apana.org.au/~herbert/dash/"
+arch=('x86_64')
+license=('GPLv2+')
+depends_doc=()
+depends=('musl')
+makedepends=('coreutils')
+source=(git://git.kernel.org/pub/scm/utils/dash/dash.git)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  ./autogen.sh
+  ./configure --prefix=/ \
+              --sysconfdir=/etc \
+              --mandir=/usr/share/man \
+              --localstatedir=/var
+  
+  make
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+}
+
+package_dash-doc() {
+  package-doc
+}
+
+package_dash() {
+  groups=('base')
+  
+  package-base
+  
+  cd "$pkgbase"
+  
+  ln -s /bin/dash "$pkgdir"/bin/sh
+}

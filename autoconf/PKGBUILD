@@ -1,0 +1,51 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgbase=autoconf
+pkgname=('autoconf-doc' 'autoconf')
+pkgver=2.69.r185.gb502e350
+pkgrel=1
+pkgdesc="A GNU tool for automatically configuring source code"
+arch=('x86_64')
+license=('GPL2+')
+url="http://www.gnu.org/software/autoconf"
+depends_doc=()
+depends_dev=('autoconf')
+depends=('m4' 'perl')
+source=(git://git.sv.gnu.org/autoconf.git)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  autoreconf -fvim
+  ./configure --prefix=/usr
+  
+  make
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+  
+  rm -f "$tmpdir"/usr/share/info/dir
+  # conflict with bintuils
+  rm -f "$tmpdir"/usr/share/info/standards.info
+}
+
+package_autoconf-doc() {
+  package-doc
+}
+
+package_autoconf() {
+  groups=('base-devel')
+  
+  package-base
+}

@@ -1,0 +1,45 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=f2fs-tools
+pkgver=1.7.0.r0.gd244656
+pkgrel=1
+pkgdesc="Tools for Flash-Friendly File System (F2FS)"
+url="http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git"
+arch=('x86_64')
+license=('GPLv2+')
+depends=('')
+makedepends=('automake' 'autoconf' 'libtool' 'util-linux-dev'
+             'linux-headers' 'bsd-compat-headers')
+source=(git://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/$pkgname.git
+        build_without_selinux.patch)
+md5sums=('SKIP'
+         '63dbbbab6930eb47addfb4d1bb1e9e36')
+
+pkgver() {
+  cd "$pkgname"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "$pkgname"
+  
+  patch -Np1 < "$srcdir/build_without_selinux.patch"
+}
+
+build() {
+  cd "$pkgname"
+  
+  ./autogen.sh
+  ./configure --prefix=/usr
+  
+  make
+}
+
+package() {
+	cd "$pkgname"
+	
+	make DESTDIR="$pkgdir" install
+	
+	mkdir -p "$pkgdir"/usr/include
+	install -m 644 include/f2fs_fs.h mkfs/f2fs_format_utils.h "$pkgdir"/usr/include/
+}

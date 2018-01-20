@@ -1,0 +1,53 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgbase=automake
+pkgname=('automake-doc' 'automake')
+pkgver=1.15.r166.g1370ce5f8
+pkgrel=1
+pkgdesc="A GNU tool for automatically creating Makefiles"
+url="http://www.gnu.org/software/automake"
+arch=('x86_64')
+license=('GPL2+ MIT Public Domain')
+depends_doc=()
+depends=('perl')
+makedepends=('autoconf')
+source=(git://git.sv.gnu.org/automake.git)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "$pkgbase"
+  
+  sed -i -e "s/GZIP_ENV = --best/GZIP_ENV = /" lib/am/distdir.am
+}
+
+build() {
+  cd "$pkgbase"
+  
+  ./bootstrap.sh
+  ./configure --prefix=/usr
+  
+  make
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+}
+
+package_automake-doc() {
+  package-doc
+}
+
+package_automake() {
+  groups=('base-devel')
+  
+  package-base
+}

@@ -1,0 +1,62 @@
+# $Id$
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Andrea Scarpino <andrea@archlinux.org>
+# Contributor: Pierre Schmitz <pierre@archlinux.de>
+
+pkgbase=cmake
+pkgname=('cmake-doc' 'cmake-dev' 'cmake')
+pkgver=3.10.1.r686.g89ed729af
+pkgrel=1
+pkgdesc='A cross-platform open-source make system'
+arch=('x86_64')
+url="http://www.cmake.org/"
+license=('custom')
+depends_doc=()
+depends_dev=('cmake')
+depends=('libcurl' 'zlib' 'libarchive')
+makedepends=('curl-dev' 'zlib-dev' 'libarchive-dev')
+source=("git+https://gitlab.kitware.com/cmake/cmake.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+
+  cmake -G 'Ninja' \
+    -DCMAKE_INSTALL_PREFIX:PATH=/usr \
+    -DCMAKE_USE_SYSTEM_CURL:BOOL=ON \
+    -DCMAKE_USE_SYSTEM_LIBARCHIVE:BOOL=ON \
+    -DCMAKE_USE_SYSTEM_ZLIB:BOOL=ON
+    
+  ninja
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+  
+  DESTDIR="$tmpdir" ninja install
+
+  install -Dm644 Copyright.txt "$tmpdir/usr/share/licenses/$pkgbase/LICENSE"
+  
+  mv "$tmpdir/usr/doc" "$tmpdir/usr/share/doc"
+  mv "$tmpdir/usr/share/doc/cmake-${pkgver%.*.*.*}" "$tmpdir/usr/share/doc/cmake"
+}
+
+package_cmake-doc(){
+  package-doc
+}
+
+package_cmake-dev(){
+  package-dev
+}
+
+package_cmake(){
+  package-base
+}

@@ -1,0 +1,69 @@
+pkgbase=gummiboot
+pkgname=('gummiboot-doc' 'gummiboot')
+pkgver=48.r8.g2bcd919
+pkgrel=1
+pkgdesc="Simple EFI Boot Manager"
+url="https://cgit.freedesktop.org/gummiboot/"
+arch=('x86_64')
+license=('LGPLv2+')
+depends_doc=()
+depends=('musl')
+makedepends=('gnu-efi-dev' 'docbook-xsl' 'libxslt')
+source=('git://anongit.freedesktop.org/gummiboot#commit=2bcd919c681c952eb867ef1bdb458f1bc49c2d55'
+        'loader.conf'
+        'resslinux.conf'
+        'clang.patch')
+sha256sums=('SKIP'
+            '25ae58b1be238818060a1eb5345b36c960e405d0da2067c7d125a777147dc4cc'
+            '1a7e6d884ddba213995aa0d3aee294f434ce9eacc3b39b51fd4742a7cff1f06a'
+            '76f4122e3cd3b153728cdf69f4201df8f6aaf56f382af2243c5cf41c1a435668')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v-//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "$pkgbase"
+  
+  patch -Np1 -i "$srcdir"/clang.patch
+  sed -i -e "s/-print-libgcc-file-name/-print-file-name=libc.a/g" Makefile.am
+}
+
+build() {
+  cd "$pkgbase"
+  
+  ./autogen.sh
+  ./configure --prefix=/usr \
+              --disable-blkid
+  
+  make EFI_CFLAGS="$CFLAGS -std=gnu89"
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+}
+
+package_gummiboot-doc() {
+  package-doc
+}
+
+package_gummiboot() {
+  backup=(boot/loader/loader.conf boot/loader/entries/resslinux.conf)
+  package-base
+  
+  mkdir -p "$pkgdir/boot/EFI/Boot/"
+  mv "$pkgdir/usr/lib/gummiboot/gummibootx64.efi" "$pkgdir/boot/EFI/Boot/bootx64.efi"
+  
+  mkdir -p "$pkgdir/boot/loader/entries/"
+  
+  install -Dm644 "$srcdir/loader.conf" "$pkgdir/boot/loader"
+  install -Dm644 "$srcdir/resslinux.conf" "$pkgdir/boot/loader/entries"
+  
+  rm -rf "$pkgdir/usr"
+}

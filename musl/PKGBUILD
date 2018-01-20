@@ -1,0 +1,63 @@
+pkgbase=musl
+pkgname=('musl-dev' 'musl')
+pkgver=1.1.18.r57.g628cf979
+pkgrel=1
+pkgdesc="the musl c library (libc) implementation"
+url="http://www.musl-libc.org/"
+arch=('x86_64')
+license=('MIT')
+depends_dev=('musl')
+depends=()
+source=('git://git.musl-libc.org/musl'
+        '__stack_chk_fail_local.c')
+md5sums=('SKIP'
+         '0df687757221bbb0fc1aa67f1bd646f9')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  # provide minimal libssp_nonshared.a so we don't need libssp from gcc
+  ${CROSS_COMPILE}clang $CPPFLAGS $CFLAGS -c "$srcdir"/__stack_chk_fail_local.c -o __stack_chk_fail_local.o
+  ${CROSS_COMPILE}ar r libssp_nonshared.a __stack_chk_fail_local.o
+
+  # note: not autotools
+  ./configure --prefix=/lib/musl
+
+  sed -i -e "s/-fexcess-precision=standard -frounding-math //" config.mak
+
+  make
+}
+
+package() {
+  cd "$pkgbase"
+  
+  make DESTDIR="$tmpdir" install
+  
+  #install -dm755 "$tmpdir"/usr/lib/
+  #mv "$tmpdir"/lib/ld-musl*.so* "$tmpdir"/usr/lib/
+  #rmdir "$tmpdir"/lib
+
+  cp libssp_nonshared.a "$tmpdir/lib/musl/lib/"
+  
+  mkdir -p "$tmpdir"/bin
+  ln -sf /lib/ld-musl-${CARCH}.so.1 "$tmpdir"/bin/ldd
+
+  # remove libintl.h, currently we don't want by default any NLS
+  # and use GNU gettext where needed. the plan is to migrate to
+  # musl gettext() later on as fully as possible.
+  rm "$tmpdir/lib/musl/include/libintl.h"
+}
+
+package_musl-dev() {
+  package-dev
+}
+
+package_musl() {
+  package-base
+}

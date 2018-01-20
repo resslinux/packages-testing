@@ -1,0 +1,50 @@
+pkgbase=pigz
+pkgname=('pigz-doc' 'pigz')
+pkgver=2.3.4.r0.ga6f3dab
+pkgrel=1
+pkgdesc="Parallel implementation of the gzip file compressor"
+url="https://zlib.net/pigz/"
+arch=('x86_64')
+license=('custom')
+depends_doc=()
+depends_dev=('pigz')
+depends_lib=()
+depends=('zlib')
+makedepends=()
+source=(git://github.com/madler/$pkgbase.git)
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"
+  
+  make
+}
+
+package(){
+  package-init
+  
+  cd "$pkgbase"
+  
+  mkdir -p "$tmpdir"/usr/bin
+  mkdir -p "$tmpdir"/usr/share/man/man1
+  
+  for i in pigz unpigz; do
+    install -m755 $i "$tmpdir"/usr/bin
+  done
+  
+  install -m644 pigz.1 "$tmpdir"/usr/share/man/man1
+}
+
+package_pigz-doc() {
+  package-doc
+}
+
+package_pigz() {
+  package-base
+}

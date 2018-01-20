@@ -1,0 +1,78 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgbase=ncurses
+pkgname=('ncurses-doc' 'ncurses-dev' 'ncurses-lib' 'ncurses')
+pkgver=6.0.20161217
+pkgrel=1
+pkgdesc="Console display library"
+url="http://www.gnu.org/software/ncurses/"
+arch=('x86_64')
+license=('MIT')
+depends_doc=()
+depends_dev=('ncurses')
+depends_lib=('musl')
+depends=('musl' 'ncurses-lib')
+source=(http://invisible-island.net/datafiles/current/ncurses.tar.gz)
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$srcdir"
+
+  ls -d "$pkgbase"-* | sed 's/^ncurses-//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  cd "$pkgbase"-*
+  
+  ./configure --mandir=/usr/share/man \
+              --without-ada \
+              --disable-termcap \
+              --disable-rpath-hack \
+              --with-pkg-config-libdir=/usr/lib/pkgconfig \
+              --without-cxx-binding \
+              --with-terminfo-dirs="/etc/terminfo:/usr/share/terminfo" \
+              --enable-pc-files \
+              --with-shared \
+              --enable-widec
+
+  make
+}
+
+package() {
+  package-init
+  
+  cd "$pkgbase"-*
+  
+  make DESTDIR="$tmpdir" install
+  
+  rm "$tmpdir"/usr/bin/clear
+  rm "$tmpdir"/usr/bin/reset
+}
+
+package_ncurses-doc() {
+  package-doc
+}
+
+package_ncurses-dev() {
+  package-dev
+  
+  # force link against *w.so
+  for lib in ncurses ncurses++ form panel menu; do
+    echo "INPUT(-l${lib}w)" > "$pkgdir"/usr/lib/lib${lib}.so
+    ln -s ${lib}w.pc "$pkgdir"/usr/lib/pkgconfig/${lib}.pc
+  done
+  
+  # link curses -> ncurses
+  echo "INPUT(-lncursesw)" > "$pkgdir"/usr/lib/libcursesw.so
+  ln -s libncurses.so "$pkgdir"/usr/lib/libcurses.so
+}
+
+package_ncurses-lib() {
+  mkdir -p "$pkgdir"/usr/share
+  
+  mv "$tmpdir"/usr/lib "$pkgdir"/usr/
+  mv "$tmpdir"/usr/share/terminfo "$pkgdir"/usr/share/
+}
+
+package_ncurses(){
+  package-base
+}
