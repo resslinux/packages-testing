@@ -66,6 +66,13 @@ prepare() {
 build() {
   cd "$pkgbase"
   
+  #CFLAGS=${CFLAGS//'-flto=thin'/}
+  #CXXFLAGS=${CXXFLAGS//'-flto=thin'/}
+  #LDFLAGS=${LDFLAGS//'-flto=thin'/}
+  
+  #LDFLAGS=${LDFLAGS//'-fuse-ld=lld'/}
+  #LDFLAGS=${LDFLAGS//'--lto-O3,'/}
+  
   make ${MAKEFLAGS} LOCALVERSION= bzImage modules
 }
 
